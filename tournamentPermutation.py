@@ -1,5 +1,6 @@
 from random import *
 
+results = {"games": []}
 
 class game:
     
@@ -19,40 +20,60 @@ class game:
             self.winner = self.contestant1
             self.loser = self.contestant2
         tmp = " "
-        for i in range(overheadPrint):
+        for i in range(overheadPrint * 20):
             tmp += " "
-        print(tmp + str(self.contestant1) + " vs. " + str(self.contestant2) + " --> " + str(self.winner))
+        # print(tmp + str(self.contestant1) + " vs. " + str(self.contestant2) + " --> " + str(self.winner))
 
 def playLayer(layer, overheadPrint):
+    global results
     newLayer = list()
-
     for g in layer:
+        tmpstr = str(g.contestant1) + " vs. " + str(g.contestant2)
+        results["games"].append({"contestant": tmpstr, "level": overheadPrint, "winner": g.contestant1})
         g.play(overheadPrint)
     if len(layer) > 1:
         i = 0
         while i < len(layer):
             newLayer.append(game(layer[i].winner,layer[i+1].winner))
             i = i + 2
-        playLayer(newLayer, overheadPrint + 20)
+        playLayer(newLayer, overheadPrint + 1)
 
 #Uefa Euro 2016 (Round of 16)
+# playerslist = [
+#     "Schweiz",
+#     "Polen",
+#     "Kroatien",
+#     "Portugal",
+#     "Wales",
+#     "Nordirland",
+#     "Ungarn",
+#     "Belgien",
+#     "Deutschland",
+#     "Slowakei",
+#     "Italien",
+#     "Spanien",
+#     "Frankreich",
+#     "Irland",
+#     "England",
+#     "Island"
+# ]
+#Uefa Euro 2016 (Round of 8)
+# playerslist = [
+#     "Polen",
+#     "Portugal",
+#     "Wales",
+#     "Belgien",
+#     "Deutschland",
+#     "Italien",
+#     "Frankreich",
+#     "Island"
+# ]
+#Uefa Euro 2016 (Round of 4)
 playerslist = [
-    "Schweiz",
-    "Polen",
-    "Kroatien",
     "Portugal",
     "Wales",
-    "Nordirland",
-    "Ungarn",
-    "Belgien",
     "Deutschland",
-    "Slowakei",
-    "Italien",
-    "Spanien",
-    "Frankreich",
-    "Irland",
-    "England",
-    "Island"
+    "Frankreich"
 ]
 
 ##main
@@ -62,3 +83,12 @@ while i < len(playerslist):
     games.append(game(playerslist[i], playerslist[i+1]))
     i = i + 2
 playLayer(games, 0)
+
+
+#output
+for entry in results["games"]:
+    tmp = ""
+    for i in range(entry["level"] * 20):
+        tmp += " "
+    print(tmp + entry["contestant"] + " --> " + entry["winner"])
+print()
