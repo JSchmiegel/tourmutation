@@ -1,4 +1,5 @@
 from random import *
+import json
 
 results = {"games": []}
 
@@ -86,6 +87,8 @@ playLayer(games, 0)
 
 
 #output
+with open("permutations.json", "w") as file:
+    json.dump(results["games"], file)
 for entry in results["games"]:
     tmp = ""
     for i in range(entry["level"] * 20):
