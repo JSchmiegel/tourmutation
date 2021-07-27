@@ -1,13 +1,24 @@
-#[ ] Error check
-#   [ ] If the user input is correct! (only 4, 8, 16, ... competitors)
-#[~] print of results -> only for 4 and 8 competitors
-#[ ] print command output optional to file
+'''
+TODO
+[ ] nice Name 😉
+[ ] give user input option
+   [ ] insert competitors
+   [x] print to file?
+[~] print of results -> only for 4 and 8 competitors
+[x] print command output optional to file
+[ ] Error check
+   [ ] If the user input is correct! (only 4, 8, 16, ... competitors)
+''' 
 
 
+from collections import UserString
 import json
-from os import rename
+import os
+import re
 
+#define global variables
 results = {}
+printResults = True
 
 class game:
     
@@ -56,8 +67,31 @@ def fillString(insert, end):
         insert += " "
     return insert
 
+def printResult(output):
+    if printResults:
+        with open("output.txt", "a") as f:
+            f.write (output + "\n")
+    print(output)
+
+def getUserInput():
+    noCorrectInput = True
+    while noCorrectInput:
+        userInput = input("Do you want to save the result as txt file? [Y/N]")
+        if re.match("(Y|y)((E|e)(S|s))?", userInput):
+            printResults = True
+            noCorrectInput = False
+        elif re.match("(N|n)(O|o)?", userInput):
+            printResults = False
+            noCorrectInput = False
+        else:
+            print("Please make a correct input!")
+            noCorrectInput = True
+
+
 
 ##main
+
+getUserInput()
 
 #Uefa Euro 2016 (Round of 16)
 # competitorslist = [
@@ -99,7 +133,7 @@ competitorslist = [
 
 games = list()
 
-#calculate all options (parsed as binary number) (only semifinals!!)
+#calculate all options (parsed as binary number)
 probability = list()
 numberOfPermutation = 2**(len(competitorslist)-1)
 for i in range(numberOfPermutation):
@@ -122,49 +156,46 @@ for el in probability:
 
 #####output
 
-#sort the dictonary by gameNumber
-# resultsSorted = sorted(results["games"], key=lambda x : x["gameNumber"], reverse=False)
-
 #write json file
 with open("permutations.json", "w") as file:
     json.dump(results, file, indent=4)
 
-#write output txt file
+#write output commandline and file
+toManyGames = False
+
+if os.path.exists("output.txt"):
+    os.remove("output.txt")
 for permutation in results:
-    print("#### " + permutation + " ####\n")
+    printResult("#### " + permutation + " ####\n")
     
     if len(competitorslist) == 4:
-        print(results[permutation][0]["competitors"]["1"])
-        print("    |--------" + results[permutation][0]["winner"])
-        print(fillString(results[permutation][0]["competitors"]["2"], 15) + "|")
-        print(fillString("", 15) + "|--------" + results[permutation][0+2]["winner"])
-        print(fillString(results[permutation][1]["competitors"]["1"], 15) + "|")
-        print("    |--------" + results[permutation][1]["winner"])
-        print(results[permutation][1]["competitors"]["2"])
-
+        printResult(results[permutation][0]["competitors"]["1"])
+        printResult("    |--------" + results[permutation][0]["winner"])
+        printResult(fillString(results[permutation][0]["competitors"]["2"], 15) + "|")
+        printResult(fillString("", 15) + "|--------" + results[permutation][0+2]["winner"])
+        printResult(fillString(results[permutation][1]["competitors"]["1"], 15) + "|")
+        printResult("    |--------" + results[permutation][1]["winner"])
+        printResult(results[permutation][1]["competitors"]["2"])
     elif len(competitorslist) == 8:
-        print(results[permutation][0]["competitors"]["1"])
-        print("    |--------" + results[permutation][0]["winner"])
-        print(fillString(results[permutation][0]["competitors"]["2"], 15) + "|")
-        print(fillString("", 15) + "|--------" + results[permutation][0+4]["winner"])
-        print(fillString(fillString(results[permutation][1]["competitors"]["1"], 15) + "|", 27) + "|")
-        print(fillString("    |--------" + results[permutation][1]["winner"], 27) + "|")
-        print(fillString(results[permutation][1]["competitors"]["2"], 27) + "|")
-        print(fillString("", 27) + "|--------" + results[permutation][1+4]["winner"])
-        print(fillString(results[permutation][2]["competitors"]["1"], 27) + "|")
-        print(fillString("    |--------" + results[permutation][2]["winner"], 27) + "|")
-        print(fillString(fillString(results[permutation][2]["competitors"]["2"], 15) + "|", 27) + "|")
-        print(fillString("", 15) + "|--------" + results[permutation][2+3]["winner"])
-        print(fillString(results[permutation][3]["competitors"]["1"], 15) + "|")
-        print("    |--------" + results[permutation][3]["winner"])
-        print(results[permutation][3]["competitors"]["2"])
-
+        printResult(results[permutation][0]["competitors"]["1"])
+        printResult("    |--------" + results[permutation][0]["winner"])
+        printResult(fillString(results[permutation][0]["competitors"]["2"], 15) + "|")
+        printResult(fillString("", 15) + "|--------" + results[permutation][0+4]["winner"])
+        printResult(fillString(fillString(results[permutation][1]["competitors"]["1"], 15) + "|", 27) + "|")
+        printResult(fillString("    |--------" + results[permutation][1]["winner"], 27) + "|")
+        printResult(fillString(results[permutation][1]["competitors"]["2"], 27) + "|")
+        printResult(fillString("", 27) + "|--------" + results[permutation][1+4]["winner"])
+        printResult(fillString(results[permutation][2]["competitors"]["1"], 27) + "|")
+        printResult(fillString("    |--------" + results[permutation][2]["winner"], 27) + "|")
+        printResult(fillString(fillString(results[permutation][2]["competitors"]["2"], 15) + "|", 27) + "|")
+        printResult(fillString("", 15) + "|--------" + results[permutation][2+3]["winner"])
+        printResult(fillString(results[permutation][3]["competitors"]["1"], 15) + "|")
+        printResult("    |--------" + results[permutation][3]["winner"])
+        printResult(results[permutation][3]["competitors"]["2"])
     else:
-        print("Saddly there is no nice output for this many games. 😥")
+        toManyGames = True
 
-    # for entry in results[permutation]:
-    #     if entry["level"] == 0:
-    #         print(entry["competitors"]["1"])
-    #         print("    |--------")
-    #         print(entry["competitors"]["2"])
-    print("\n\n")
+    printResult("\n\n")
+    
+if toManyGames:
+    printResult("Saddly there is no nice output for this many games. 😥")
