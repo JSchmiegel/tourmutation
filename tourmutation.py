@@ -1,20 +1,3 @@
-'''
-TODO
-[x] nice Name 😉 -> tourmutation (every possible permutation in a tournament)
-[x] give user input option
-   [x] insert competitors
-   [x] print to file?
-[~] print of results -> only for 4 and 8 competitors
-[x] print command output optional to file
-[x] Error check
-   [x] If the user input is correct! (only 4, 8, 16, ... competitors)
-[x] make a cli by using typer
-    tourmutation --example
-    tourmutation --help
-    tourmutation --output
-    tourmutation --example --output
-''' 
-
 import typer
 from collections import UserString
 import json
@@ -221,6 +204,9 @@ def main(
         example: int = typer.Option(0, help="An example with the competiors of the Uefa 2021.\n 1 = Round of 4\n 2 = Round of 8\n 3 = Round of 16"),
         debug: bool = typer.Option(False, help="If you want to get the json of the permutations.")
     ):
+        """
+        Calculate all permutations for a contest.  If you don't specify any of the optional parameters, you can simply select how many contestants your contest has and what your contestants' names are.
+        """
         if export:
             printResults = True
         else:
