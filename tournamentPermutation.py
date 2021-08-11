@@ -1,24 +1,32 @@
 '''
 TODO
-[ ] nice Name 😉
-[ ] give user input option
-   [ ] insert competitors
+[x] nice Name 😉 -> tourmutation (every possible permutation in a tournament)
+[x] give user input option
+   [x] insert competitors
    [x] print to file?
 [~] print of results -> only for 4 and 8 competitors
 [x] print command output optional to file
-[ ] Error check
-   [ ] If the user input is correct! (only 4, 8, 16, ... competitors)
+[x] Error check
+   [x] If the user input is correct! (only 4, 8, 16, ... competitors)
+[x] make a cli by using typer
+    tourmutation --example
+    tourmutation --help
+    tourmutation --output
+    tourmutation --example --output
 ''' 
 
-
+import typer
 from collections import UserString
 import json
 import os
 import re
+import math
+from num2words import num2words
 
 #define global variables
 results = {}
-printResults = True
+printResults = False
+debugingOutput = False
 
 class game:
     
@@ -73,129 +81,161 @@ def printResult(output):
             f.write (output + "\n")
     print(output)
 
-def getUserInput():
+def getUserInput() -> list:
     noCorrectInput = True
+    competitorslist = list()
     while noCorrectInput:
-        userInput = input("Do you want to save the result as txt file? [Y/N]")
-        if re.match("(Y|y)((E|e)(S|s))?", userInput):
-            printResults = True
-            noCorrectInput = False
-        elif re.match("(N|n)(O|o)?", userInput):
-            printResults = False
-            noCorrectInput = False
+        userInput = input("How many competiors do your tournament have?\n")
+        if re.match("[0-9]+", userInput):
+            userInputInt = int(userInput)
+            if userInputInt != 0 and float(math.log(userInputInt,2)).is_integer:
+                for i in range(userInputInt):
+                    competitor = input("Please insert your " + num2words(i+1, to="ordinal_num") + " competitor:\n")
+                    competitorslist.append(competitor)
+                noCorrectInput = False
+            else:
+                print("Please output only numbers that are a power of 2")
+                noCorrectInput = True
         else:
             print("Please make a correct input!")
             noCorrectInput = True
+    return competitorslist
 
 
+def output(results: dir, competitorslist: list):
+        #write json file
+        if debugingOutput:
+            with open("permutations.json", "w") as file:
+              json.dump(results, file, indent=4)
 
-##main
+        #write output commandline and file
+        toManyGames = False
 
-getUserInput()
+        if os.path.exists("output.txt"):
+            os.remove("output.txt")
+        for permutation in results:
+            printResult("#### " + permutation + " ####\n")
+            
+            if len(competitorslist) == 4:
+                printResult(results[permutation][0]["competitors"]["1"])
+                printResult("    |--------" + results[permutation][0]["winner"])
+                printResult(fillString(results[permutation][0]["competitors"]["2"], 15) + "|")
+                printResult(fillString("", 15) + "|--------" + results[permutation][0+2]["winner"])
+                printResult(fillString(results[permutation][1]["competitors"]["1"], 15) + "|")
+                printResult("    |--------" + results[permutation][1]["winner"])
+                printResult(results[permutation][1]["competitors"]["2"])
+            elif len(competitorslist) == 8:
+                printResult(results[permutation][0]["competitors"]["1"])
+                printResult("    |--------" + results[permutation][0]["winner"])
+                printResult(fillString(results[permutation][0]["competitors"]["2"], 15) + "|")
+                printResult(fillString("", 15) + "|--------" + results[permutation][0+4]["winner"])
+                printResult(fillString(fillString(results[permutation][1]["competitors"]["1"], 15) + "|", 27) + "|")
+                printResult(fillString("    |--------" + results[permutation][1]["winner"], 27) + "|")
+                printResult(fillString(results[permutation][1]["competitors"]["2"], 27) + "|")
+                printResult(fillString("", 27) + "|--------" + results[permutation][1+4]["winner"])
+                printResult(fillString(results[permutation][2]["competitors"]["1"], 27) + "|")
+                printResult(fillString("    |--------" + results[permutation][2]["winner"], 27) + "|")
+                printResult(fillString(fillString(results[permutation][2]["competitors"]["2"], 15) + "|", 27) + "|")
+                printResult(fillString("", 15) + "|--------" + results[permutation][2+3]["winner"])
+                printResult(fillString(results[permutation][3]["competitors"]["1"], 15) + "|")
+                printResult("    |--------" + results[permutation][3]["winner"])
+                printResult(results[permutation][3]["competitors"]["2"])
+            else:
+                toManyGames = True
 
-#Uefa Euro 2016 (Round of 16)
-# competitorslist = [
-#     "Schweiz",
-#     "Polen",
-#     "Kroatien",
-#     "Portugal",
-#     "Wales",
-#     "Nordirland",
-#     "Ungarn",
-#     "Belgien",
-#     "Deutschland",
-#     "Slowakei",
-#     "Italien",
-#     "Spanien",
-#     "Frankreich",
-#     "Irland",
-#     "England",
-#     "Island"
-# ]
-#Uefa Euro 2016 (Round of 8)
-# competitorslist = [
-#     "Polen",
-#     "Portugal",
-#     "Wales",
-#     "Belgien",
-#     "Deutschland",
-#     "Italien",
-#     "Frankreich",
-#     "Island"
-# ]
-#Uefa Euro 2016 (Round of 4)
-competitorslist = [
-    "Portugal",
-    "Wales",
-    "Deutschland",
-    "Frankreich"
-]
+            printResult("\n\n")
+            
+        if toManyGames:
+            printResult("Saddly there is no nice output for this many games. 😥")
 
-games = list()
+def mainCalculation(competitorslist: list):
+    games = list()
 
-#calculate all options (parsed as binary number)
-probability = list()
-numberOfPermutation = 2**(len(competitorslist)-1)
-for i in range(numberOfPermutation):
-    probability.append(bin(i))
+    #calculate all options (parsed as binary number)
+    probability = list()
+    numberOfPermutation = 2**(len(competitorslist)-1)
+    for i in range(numberOfPermutation):
+        probability.append(bin(i))
 
-j = 0
-for el in probability:
-    games.clear()
-    i = 0
-    while i < len(competitorslist):
-        games.append(game(competitorslist[i], competitorslist[i+1]))
-        i = i + 2
-    results.update({
-        "Permutation " + str(j): []
-    })
-    playLayer(games, 0, el, j)
-    j = j + 1
+    j = 0
+    for el in probability:
+        games.clear()
+        i = 0
+        while i < len(competitorslist):
+            games.append(game(competitorslist[i], competitorslist[i+1]))
+            i = i + 2
+        results.update({
+            "Permutation " + str(j): []
+        })
+        playLayer(games, 0, el, j)
+        j = j + 1
+        
+    output(results, competitorslist)
 
 
+def getExample(example: int) -> list:
+    if example == 1:
+        #Uefa Euro 2020 (Round of 4)
+        competitorslist = [
+            "Italy",
+            "Spain",
+            "England",
+            "Denmark"
+        ]
+    elif example == 2:
+        #Uefa Euro 2020 (Round of 8)
+        competitorslist = [
+            "Belgium",
+            "Italy",
+            "Switzerland",
+            "Spain",
+            "Ukraine",
+            "England",
+            "Czech Republic",
+            "Denmark"
+        ]
+    elif example == 3:
+        #Uefa Euro 2020 (Round of 16)
+        competitorslist = [
+            "Belgium",
+            "Portugal",
+            "Italy",
+            "Austria",
+            "France",
+            "Switzerland",
+            "Croatia",
+            "Spain",
+            "Sweden",
+            "Ukraine",
+            "England",
+            "Germany",
+            "Netherlands",
+            "Czech Repbulic",
+            "Walse",
+            "Denmark"
+        ]
+    return competitorslist
 
-#####output
+def main(
+        export: bool = typer.Option(False, help="Do you want an export of the result as txt?"),
+        example: int = typer.Option(0, help="An example with the competiors of the Uefa 2021.\n 1 = Round of 4\n 2 = Round of 8\n 3 = Round of 16"),
+        debug: bool = typer.Option(False, help="If you want to get the json of the permutations.")
+    ):
+        if export:
+            printResults = True
+        else:
+            printResult = False
+        if debug:
+            debugingOutput = True
+        else:
+            debugingOutput = False
+        
+        if example != 0:
+            competitorslist = getExample(example)
+        else:
+            competitorslist = getUserInput()
+        mainCalculation(competitorslist)
 
-#write json file
-with open("permutations.json", "w") as file:
-    json.dump(results, file, indent=4)
 
-#write output commandline and file
-toManyGames = False
-
-if os.path.exists("output.txt"):
-    os.remove("output.txt")
-for permutation in results:
-    printResult("#### " + permutation + " ####\n")
-    
-    if len(competitorslist) == 4:
-        printResult(results[permutation][0]["competitors"]["1"])
-        printResult("    |--------" + results[permutation][0]["winner"])
-        printResult(fillString(results[permutation][0]["competitors"]["2"], 15) + "|")
-        printResult(fillString("", 15) + "|--------" + results[permutation][0+2]["winner"])
-        printResult(fillString(results[permutation][1]["competitors"]["1"], 15) + "|")
-        printResult("    |--------" + results[permutation][1]["winner"])
-        printResult(results[permutation][1]["competitors"]["2"])
-    elif len(competitorslist) == 8:
-        printResult(results[permutation][0]["competitors"]["1"])
-        printResult("    |--------" + results[permutation][0]["winner"])
-        printResult(fillString(results[permutation][0]["competitors"]["2"], 15) + "|")
-        printResult(fillString("", 15) + "|--------" + results[permutation][0+4]["winner"])
-        printResult(fillString(fillString(results[permutation][1]["competitors"]["1"], 15) + "|", 27) + "|")
-        printResult(fillString("    |--------" + results[permutation][1]["winner"], 27) + "|")
-        printResult(fillString(results[permutation][1]["competitors"]["2"], 27) + "|")
-        printResult(fillString("", 27) + "|--------" + results[permutation][1+4]["winner"])
-        printResult(fillString(results[permutation][2]["competitors"]["1"], 27) + "|")
-        printResult(fillString("    |--------" + results[permutation][2]["winner"], 27) + "|")
-        printResult(fillString(fillString(results[permutation][2]["competitors"]["2"], 15) + "|", 27) + "|")
-        printResult(fillString("", 15) + "|--------" + results[permutation][2+3]["winner"])
-        printResult(fillString(results[permutation][3]["competitors"]["1"], 15) + "|")
-        printResult("    |--------" + results[permutation][3]["winner"])
-        printResult(results[permutation][3]["competitors"]["2"])
-    else:
-        toManyGames = True
-
-    printResult("\n\n")
-    
-if toManyGames:
-    printResult("Saddly there is no nice output for this many games. 😥")
+if __name__ == "__main__":
+    typer.run(main)
