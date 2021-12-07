@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+
+
 import typer
 from collections import UserString
 import json
